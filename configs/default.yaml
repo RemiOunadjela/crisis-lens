@@ -1,0 +1,37 @@
+detection:
+  enabled: true
+  languages:
+    - en
+    - es
+    - pt
+  batch_size: 64
+  dedup_window_seconds: 300
+  min_confidence: 0.3
+  thresholds:
+    p0_threshold: 0.95
+    p1_threshold: 0.85
+    p2_threshold: 0.70
+    p3_threshold: 0.50
+
+classification:
+  llm:
+    provider: openai
+    model: gpt-4o-mini
+    api_base: null
+    api_key_env: OPENAI_API_KEY
+    temperature: 0.1
+    max_tokens: 1024
+    timeout_seconds: 30
+  confidence_threshold: 0.6
+  max_labels: 3
+  boosted_prompt_iterations: 3
+  golden_set_path: null
+
+reports:
+  format: markdown
+  include_raw_signals: false
+  max_signals_per_report: 50
+  handover_lookback_hours: 8
+
+max_concurrent_tasks: 16
+pipeline_timeout_seconds: 300
