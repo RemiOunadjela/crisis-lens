@@ -54,23 +54,37 @@ class DetectionRule(ABC):
 
 
 class KeywordRule(DetectionRule):
-    """Term-frequency based detection for known crisis vocabulary."""
+    """Term-frequency based detection for known crisis vocabulary.
+
+    Supports per-language keyword sets, which is critical for platforms
+    operating across LATAM, SEA, and other multilingual markets.
+    """
 
     CRISIS_TERMS: dict[str, dict[str, list[str]]] = {
         "violence": {
             "en": ["shooting", "shooter", "gunfire", "attack", "bombing", "stabbing", "massacre", "assault"],
+            "es": ["tiroteo", "ataque", "bombardeo", "apuñalamiento", "masacre"],
+            "pt": ["tiroteio", "ataque", "bombardeio", "esfaqueamento", "massacre"],
         },
         "natural_disaster": {
             "en": ["earthquake", "tsunami", "hurricane", "flood", "wildfire", "tornado"],
+            "es": ["terremoto", "tsunami", "huracán", "inundación", "incendio forestal"],
+            "pt": ["terremoto", "tsunami", "furacão", "enchente", "incêndio florestal"],
         },
         "platform_abuse": {
             "en": ["raid", "brigading", "bot network", "coordinated", "mass report", "doxxing"],
+            "es": ["redada", "ataque coordinado", "red de bots", "reporte masivo"],
+            "pt": ["ataque coordenado", "rede de bots", "denúncia em massa"],
         },
         "child_safety": {
             "en": ["csam", "grooming", "minor", "underage", "exploitation"],
+            "es": ["menor de edad", "explotación", "acoso a menores"],
+            "pt": ["menor de idade", "exploração", "aliciamento"],
         },
         "self_harm": {
             "en": ["suicide", "self-harm", "cutting", "overdose", "end my life"],
+            "es": ["suicidio", "autolesión", "sobredosis"],
+            "pt": ["suicídio", "automutilação", "overdose"],
         },
     }
 
