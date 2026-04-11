@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/RemiOunadjela/crisis-lens/actions/workflows/ci.yml/badge.svg)](https://github.com/RemiOunadjela/crisis-lens/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 **AI-Powered Crisis Detection for Trust & Safety**
 
@@ -62,6 +62,14 @@ crisis-lens addresses these gaps with a pipeline that combines rule-based detect
 ### Installation
 
 ```bash
+pip install crisis-lens
+```
+
+For development:
+
+```bash
+git clone https://github.com/RemiOunadjela/crisis-lens.git
+cd crisis-lens
 pip install -e ".[dev]"
 ```
 
@@ -226,7 +234,8 @@ See `configs/default.yaml` for the full configuration reference.
 ## Development
 
 ```bash
-# Install dev dependencies
+git clone https://github.com/RemiOunadjela/crisis-lens.git
+cd crisis-lens
 pip install -e ".[dev]"
 
 # Run tests
@@ -238,6 +247,12 @@ ruff check crisis_lens/ tests/
 # Type check
 mypy crisis_lens/ --ignore-missing-imports
 ```
+
+## Related Projects
+
+- **[safetybench](https://github.com/RemiOunadjela/safetybench)** -- Benchmarking framework for evaluating content moderation models against T&S-specific metrics.
+- **[metric-guard](https://github.com/RemiOunadjela/metric-guard)** -- Data quality monitoring for compliance and regulatory metrics pipelines.
+- **[transparency-engine](https://github.com/RemiOunadjela/transparency-engine)** -- Regulatory-compliant transparency report generation across DSA, OSA, and custom frameworks.
 
 ## License
 
