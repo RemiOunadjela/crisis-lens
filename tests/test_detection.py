@@ -47,6 +47,21 @@ class TestKeywordRule:
         score = rule.evaluate("Alerta de terremoto na região", language="pt")
         assert score > 0.3
 
+    def test_french_violence_detection(self):
+        rule = KeywordRule("test", categories=["violence"])
+        score = rule.evaluate("Une fusillade a éclaté près de la gare", language="fr")
+        assert score > 0.3
+
+    def test_french_disaster_detection(self):
+        rule = KeywordRule("test", categories=["natural_disaster"])
+        score = rule.evaluate("Un violent séisme a frappé la région côtière", language="fr")
+        assert score > 0.3
+
+    def test_french_self_harm_detection(self):
+        rule = KeywordRule("test", categories=["self_harm"])
+        score = rule.evaluate("Des messages évoquant le suicide ont été signalés", language="fr")
+        assert score > 0.3
+
     def test_multiple_matches_boost_score(self):
         rule = KeywordRule("test", categories=["violence"])
         single = rule.evaluate("shooting reported")

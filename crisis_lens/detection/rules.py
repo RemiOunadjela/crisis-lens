@@ -65,26 +65,31 @@ class KeywordRule(DetectionRule):
             "en": ["shooting", "shooter", "gunfire", "attack", "bombing", "stabbing", "massacre", "assault"],
             "es": ["tiroteo", "ataque", "bombardeo", "apuñalamiento", "masacre"],
             "pt": ["tiroteio", "ataque", "bombardeio", "esfaqueamento", "massacre"],
+            "fr": ["fusillade", "tireur", "attaque", "attentat", "bombardement", "poignardage", "massacre", "agression"],
         },
         "natural_disaster": {
             "en": ["earthquake", "tsunami", "hurricane", "flood", "wildfire", "tornado"],
             "es": ["terremoto", "tsunami", "huracán", "inundación", "incendio forestal"],
             "pt": ["terremoto", "tsunami", "furacão", "enchente", "incêndio florestal"],
+            "fr": ["séisme", "tremblement de terre", "tsunami", "ouragan", "inondation", "incendie de forêt", "tornade"],
         },
         "platform_abuse": {
             "en": ["raid", "brigading", "bot network", "coordinated", "mass report", "doxxing"],
             "es": ["redada", "ataque coordinado", "red de bots", "reporte masivo"],
             "pt": ["ataque coordenado", "rede de bots", "denúncia em massa"],
+            "fr": ["raid", "réseau de bots", "coordonné", "signalement massif", "doxing", "harcèlement coordonné"],
         },
         "child_safety": {
             "en": ["csam", "grooming", "minor", "underage", "exploitation"],
             "es": ["menor de edad", "explotación", "acoso a menores"],
             "pt": ["menor de idade", "exploração", "aliciamento"],
+            "fr": ["mineur", "exploitation", "pédopornographie", "grooming", "harcèlement de mineurs"],
         },
         "self_harm": {
             "en": ["suicide", "self-harm", "cutting", "overdose", "end my life"],
             "es": ["suicidio", "autolesión", "sobredosis"],
             "pt": ["suicídio", "automutilação", "overdose"],
+            "fr": ["suicide", "automutilation", "surdosage", "mettre fin à ma vie"],
         },
     }
 
