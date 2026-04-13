@@ -65,13 +65,19 @@ class KeywordRule(DetectionRule):
             "en": ["shooting", "shooter", "gunfire", "attack", "bombing", "stabbing", "massacre", "assault"],
             "es": ["tiroteo", "ataque", "bombardeo", "apuñalamiento", "masacre"],
             "pt": ["tiroteio", "ataque", "bombardeio", "esfaqueamento", "massacre"],
-            "fr": ["fusillade", "tireur", "attaque", "attentat", "bombardement", "poignardage", "massacre", "agression"],
+            "fr": [
+                "fusillade", "tireur", "attaque", "attentat",
+                "bombardement", "poignardage", "massacre", "agression",
+            ],
         },
         "natural_disaster": {
             "en": ["earthquake", "tsunami", "hurricane", "flood", "wildfire", "tornado"],
             "es": ["terremoto", "tsunami", "huracán", "inundación", "incendio forestal"],
             "pt": ["terremoto", "tsunami", "furacão", "enchente", "incêndio florestal"],
-            "fr": ["séisme", "tremblement de terre", "tsunami", "ouragan", "inondation", "incendie de forêt", "tornade"],
+            "fr": [
+                "séisme", "tremblement de terre", "tsunami",
+                "ouragan", "inondation", "incendie de forêt", "tornade",
+            ],
         },
         "platform_abuse": {
             "en": ["raid", "brigading", "bot network", "coordinated", "mass report", "doxxing"],
