@@ -72,7 +72,7 @@ class SeverityThresholds(BaseModel):
 
 class DetectionConfig(BaseModel):
     enabled: bool = True
-    languages: list[str] = Field(default_factory=lambda: ["en", "es", "pt"])
+    languages: list[str] = Field(default_factory=lambda: ["en", "es", "pt", "fr", "de"])
     batch_size: int = 64
     dedup_window_seconds: int = 300
     min_confidence: float = 0.3

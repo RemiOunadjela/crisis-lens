@@ -69,6 +69,10 @@ class KeywordRule(DetectionRule):
                 "fusillade", "tireur", "attaque", "attentat",
                 "bombardement", "poignardage", "massacre", "agression",
             ],
+            "de": [
+                "schießerei", "schütze", "schusswechsel", "anschlag",
+                "bombenanschlag", "messerangriff", "massaker", "überfall",
+            ],
         },
         "natural_disaster": {
             "en": ["earthquake", "tsunami", "hurricane", "flood", "wildfire", "tornado"],
@@ -78,24 +82,31 @@ class KeywordRule(DetectionRule):
                 "séisme", "tremblement de terre", "tsunami",
                 "ouragan", "inondation", "incendie de forêt", "tornade",
             ],
+            "de": [
+                "erdbeben", "tsunami", "hurrikan",
+                "überschwemmung", "waldbrand", "tornado",
+            ],
         },
         "platform_abuse": {
             "en": ["raid", "brigading", "bot network", "coordinated", "mass report", "doxxing"],
             "es": ["redada", "ataque coordinado", "red de bots", "reporte masivo"],
             "pt": ["ataque coordenado", "rede de bots", "denúncia em massa"],
             "fr": ["raid", "réseau de bots", "coordonné", "signalement massif", "doxing", "harcèlement coordonné"],
+            "de": ["botnetz", "koordiniert", "massenmeldung", "doxing", "brigading"],
         },
         "child_safety": {
             "en": ["csam", "grooming", "minor", "underage", "exploitation"],
             "es": ["menor de edad", "explotación", "acoso a menores"],
             "pt": ["menor de idade", "exploração", "aliciamento"],
             "fr": ["mineur", "exploitation", "pédopornographie", "grooming", "harcèlement de mineurs"],
+            "de": ["minderjährige", "ausbeutung", "grooming", "kindesmissbrauch", "csam"],
         },
         "self_harm": {
             "en": ["suicide", "self-harm", "cutting", "overdose", "end my life"],
             "es": ["suicidio", "autolesión", "sobredosis"],
             "pt": ["suicídio", "automutilação", "overdose"],
             "fr": ["suicide", "automutilation", "surdosage", "mettre fin à ma vie"],
+            "de": ["suizid", "selbstmord", "selbstverletzung", "überdosis", "mein leben beenden"],
         },
     }
 

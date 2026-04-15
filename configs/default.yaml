@@ -4,6 +4,8 @@ detection:
     - en
     - es
     - pt
+    - fr
+    - de
   batch_size: 64
   dedup_window_seconds: 300
   min_confidence: 0.3
