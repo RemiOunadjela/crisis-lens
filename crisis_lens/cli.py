@@ -34,7 +34,8 @@ def main() -> None:
 @click.option("--config", "config_path", type=click.Path(exists=True), help="Pipeline config YAML")
 @click.option("--min-severity", default="P4", type=click.Choice(["P0", "P1", "P2", "P3", "P4"]))
 @click.option("--output", "-o", type=click.Path(), help="Output file for signals (JSONL)")
-def monitor(source: str, config_path: str | None, min_severity: str, output: str | None) -> None:
+@click.option("--dry-run", is_flag=True, default=False, help="Parse and detect without writing output; print a summary instead")
+def monitor(source: str, config_path: str | None, min_severity: str, output: str | None, dry_run: bool) -> None:
     """Monitor a text stream for crisis signals."""
     from crisis_lens.config import PipelineConfig, Severity
     from crisis_lens.pipeline import CrisisDetectionPipeline
@@ -44,7 +45,41 @@ def monitor(source: str, config_path: str | None, min_severity: str, output: str
     severity_filter = Severity(min_severity)
     severity_order = list(Severity)
 
+    severity_colors = {
+        "P0": "red bold", "P1": "red",
+        "P2": "yellow", "P3": "blue",
+    }
+
     async def _run() -> None:
+        if dry_run:
+            console.print("[dim]-- dry run: detection only, no output written --[/dim]")
+            counts: dict[str, int] = {s.value: 0 for s in Severity}
+            total_records = 0
+            matching_signals = []
+
+            async for signal in pipeline.stream_signals(source):
+                total_records += 1
+                if severity_order.index(signal.severity) <= severity_order.index(severity_filter):
+                    counts[signal.severity.value] += 1
+                    matching_signals.append(signal)
+
+            table = Table(title="Dry Run Summary", show_header=True)
+            table.add_column("Severity", style="bold")
+            table.add_column("Signals", justify="right")
+            for sev_value, cnt in counts.items():
+                color = severity_colors.get(sev_value, "dim")
+                table.add_row(f"[{color}]{sev_value}[/{color}]", str(cnt))
+            console.print(table)
+
+            total_matching = sum(counts.values())
+            console.print(
+                f"\n[dim]records scanned:[/dim] {total_records}  "
+                f"[dim]signals that would be emitted:[/dim] {total_matching}"
+            )
+            if output:
+                console.print(f"[dim]output would have been written to:[/dim] {output}")
+            return
+
         out_file = open(output, "w") if output else None
         try:
             count = 0
@@ -63,10 +98,6 @@ def monitor(source: str, config_path: str | None, min_severity: str, output: str
                         out_file.write(line + "\n")
                     else:
                         sev = signal.severity.value
-                        severity_colors = {
-                            "P0": "red bold", "P1": "red",
-                            "P2": "yellow", "P3": "blue",
-                        }
                         color = severity_colors.get(sev, "dim")
                         text_preview = signal.text[:100]
                         console.print(
