@@ -1,5 +1,8 @@
 """Tests for the classification subsystem."""
 
+from unittest.mock import AsyncMock, patch
+
+import httpx
 import pytest
 
 from crisis_lens.classification.classifier import (
@@ -181,3 +184,108 @@ class TestCrisisClassifier:
         })
         assert result.signal_id == "SIG-001"
         assert result.primary_type == IncidentType.NATURAL_DISASTER
+
+
+class TestProviderRetry:
+    """Tests for exponential backoff retry logic in LLM providers."""
+
+    @pytest.mark.asyncio
+    async def test_succeeds_on_first_attempt(self):
+        from crisis_lens.classification.providers import OpenAIProvider
+        from crisis_lens.config import LLMProviderConfig
+
+        config = LLMProviderConfig(max_retries=3, retry_base_delay=0.0)
+        provider = OpenAIProvider(config)
+        good_response = LLMResponse({"labels": [], "overall_severity": "P4"})
+
+        with patch.object(provider, "_complete_once", new=AsyncMock(return_value=good_response)) as mock_once:
+            result = await provider.complete("sys", "usr")
+
+        assert result == good_response
+        assert mock_once.call_count == 1
+
+    @pytest.mark.asyncio
+    async def test_retries_on_timeout_then_succeeds(self):
+        from crisis_lens.classification.providers import OpenAIProvider
+        from crisis_lens.config import LLMProviderConfig
+
+        config = LLMProviderConfig(max_retries=3, retry_base_delay=0.0, retry_max_delay=0.0)
+        provider = OpenAIProvider(config)
+        good_response = LLMResponse({"labels": [], "overall_severity": "P4"})
+
+        call_results = [
+            httpx.TimeoutException("timed out"),
+            httpx.TimeoutException("timed out again"),
+            good_response,
+        ]
+
+        async def side_effect(*_: object) -> LLMResponse:
+            result = call_results.pop(0)
+            if isinstance(result, Exception):
+                raise result
+            return result  # type: ignore[return-value]
+
+        with patch.object(provider, "_complete_once", new=AsyncMock(side_effect=side_effect)) as mock_once:
+            result = await provider.complete("sys", "usr")
+
+        assert result == good_response
+        assert mock_once.call_count == 3
+
+    @pytest.mark.asyncio
+    async def test_retries_on_rate_limit_then_succeeds(self):
+        from crisis_lens.classification.providers import OpenAIProvider
+        from crisis_lens.config import LLMProviderConfig
+
+        config = LLMProviderConfig(max_retries=2, retry_base_delay=0.0, retry_max_delay=0.0)
+        provider = OpenAIProvider(config)
+        good_response = LLMResponse({"labels": [], "overall_severity": "P4"})
+
+        rate_limit_response = httpx.Response(429, text="rate limited")
+        rate_limit_error = httpx.HTTPStatusError("429", request=httpx.Request("POST", "http://x"), response=rate_limit_response)
+
+        call_results: list[Exception | LLMResponse] = [rate_limit_error, good_response]
+
+        async def side_effect(*_: object) -> LLMResponse:
+            result = call_results.pop(0)
+            if isinstance(result, Exception):
+                raise result
+            return result  # type: ignore[return-value]
+
+        with patch.object(provider, "_complete_once", new=AsyncMock(side_effect=side_effect)) as mock_once:
+            result = await provider.complete("sys", "usr")
+
+        assert result == good_response
+        assert mock_once.call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_raises_after_exhausting_retries(self):
+        from crisis_lens.classification.providers import OpenAIProvider
+        from crisis_lens.config import LLMProviderConfig
+
+        config = LLMProviderConfig(max_retries=2, retry_base_delay=0.0, retry_max_delay=0.0)
+        provider = OpenAIProvider(config)
+
+        with patch.object(provider, "_complete_once", new=AsyncMock(side_effect=httpx.TimeoutException("timeout"))) as mock_once:
+            with pytest.raises(httpx.TimeoutException):
+                await provider.complete("sys", "usr")
+
+        # Should attempt 1 + max_retries times total
+        assert mock_once.call_count == 3
+
+    @pytest.mark.asyncio
+    async def test_does_not_retry_on_auth_error(self):
+        from crisis_lens.classification.providers import OpenAIProvider
+        from crisis_lens.config import LLMProviderConfig
+
+        config = LLMProviderConfig(max_retries=3, retry_base_delay=0.0, retry_max_delay=0.0)
+        provider = OpenAIProvider(config)
+
+        auth_response = httpx.Response(401, text="unauthorized")
+        auth_error = httpx.HTTPStatusError("401", request=httpx.Request("POST", "http://x"), response=auth_response)
+
+        with patch.object(provider, "_complete_once", new=AsyncMock(side_effect=auth_error)) as mock_once:
+            with pytest.raises(httpx.HTTPStatusError):
+                await provider.complete("sys", "usr")
+
+        # No retries for 401 -- only one attempt
+        assert mock_once.call_count == 1

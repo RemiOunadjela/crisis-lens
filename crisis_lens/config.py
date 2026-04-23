@@ -87,6 +87,9 @@ class LLMProviderConfig(BaseModel):
     temperature: float = 0.1
     max_tokens: int = 1024
     timeout_seconds: int = 30
+    max_retries: int = 3
+    retry_base_delay: float = 1.0
+    retry_max_delay: float = 30.0
 
 
 class ClassificationConfig(BaseModel):

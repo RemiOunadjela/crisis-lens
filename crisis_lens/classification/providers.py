@@ -11,14 +11,19 @@ to self-hosted models (DeepSeek, Llama) for cost and data sovereignty.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
+import random
 from abc import ABC, abstractmethod
 from typing import Any
 
 import httpx
 
 from crisis_lens.config import LLMProviderConfig
+
+# HTTP status codes that warrant a retry (transient server-side errors and rate limits)
+_RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
 
 
 class LLMResponse(dict[str, Any]):
@@ -36,8 +41,39 @@ class LLMProvider(ABC):
         self.config = config
 
     @abstractmethod
-    async def complete(self, system_prompt: str, user_prompt: str) -> LLMResponse:
+    async def _complete_once(self, system_prompt: str, user_prompt: str) -> LLMResponse:
+        """Single attempt at LLM completion -- no retry logic."""
         ...
+
+    async def complete(self, system_prompt: str, user_prompt: str) -> LLMResponse:
+        """Call the LLM with exponential backoff retry on transient errors.
+
+        Retries on network timeouts, connection errors, rate limits (429), and
+        server errors (5xx). Raises immediately for client errors (4xx except 429).
+        """
+        last_exc: Exception | None = None
+        for attempt in range(self.config.max_retries + 1):
+            try:
+                return await self._complete_once(system_prompt, user_prompt)
+            except (httpx.TimeoutException, httpx.ConnectError) as exc:
+                last_exc = exc
+            except httpx.HTTPStatusError as exc:
+                if exc.response.status_code in _RETRYABLE_STATUS_CODES:
+                    last_exc = exc
+                else:
+                    raise
+
+            if attempt < self.config.max_retries:
+                delay = min(
+                    self.config.retry_base_delay * (2**attempt),
+                    self.config.retry_max_delay,
+                )
+                # Add ±25% jitter to avoid thundering herd on shared endpoints
+                delay *= 0.75 + random.random() * 0.5
+                await asyncio.sleep(delay)
+
+        assert last_exc is not None
+        raise last_exc
 
     def _parse_json_response(self, text: str) -> LLMResponse:
         """Extract JSON from LLM response, handling markdown fences."""
@@ -79,7 +115,7 @@ class OpenAIProvider(LLMProvider):
         self.api_key = os.environ.get(config.api_key_env, "")
         self.api_base = config.api_base or "https://api.openai.com/v1"
 
-    async def complete(self, system_prompt: str, user_prompt: str) -> LLMResponse:
+    async def _complete_once(self, system_prompt: str, user_prompt: str) -> LLMResponse:
         url = f"{self.api_base}/chat/completions"
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -121,7 +157,7 @@ class HuggingFaceProvider(LLMProvider):
         self.api_key = os.environ.get(config.api_key_env, "")
         self.api_base = config.api_base or "https://api-inference.huggingface.co/models"
 
-    async def complete(self, system_prompt: str, user_prompt: str) -> LLMResponse:
+    async def _complete_once(self, system_prompt: str, user_prompt: str) -> LLMResponse:
         url = f"{self.api_base}/{self.config.model}"
         headers = {
             "Authorization": f"Bearer {self.api_key}",
