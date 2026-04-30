@@ -164,6 +164,24 @@ class TestSitRepGenerator:
         assert "INC-MD" in md
         assert "SIG-001" in md
 
+    def test_markdown_severity_descriptions(self):
+        from crisis_lens.config import SEVERITY_DESCRIPTIONS, IncidentType
+        from crisis_lens.detection.rules import Signal
+
+        for severity, description in SEVERITY_DESCRIPTIONS.items():
+            signal = Signal(
+                signal_id="SIG-DESC",
+                text="Test signal",
+                score=0.9,
+                severity=severity,
+                suggested_types=[IncidentType.OTHER],
+            )
+            gen = SitRepGenerator()
+            sitrep = gen.generate(incident_id="INC-DESC", signals=[signal])
+            md = sitrep.render_markdown()
+            assert f"**Severity:** {severity.value} —" in md
+            assert description in md
+
 
 class TestHandoverGenerator:
     def test_generate_handover(self):

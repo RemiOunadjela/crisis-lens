@@ -25,6 +25,15 @@ class Severity(str, Enum):
     P4 = "P4"  # Informational, trend tracking only
 
 
+SEVERITY_DESCRIPTIONS: dict["Severity", str] = {
+    Severity.P0: "platform-wide, immediate executive escalation required",
+    Severity.P1: "regional or high-profile, senior on-call required",
+    Severity.P2: "significant but contained, standard escalation",
+    Severity.P3: "low-volume emerging signal, monitoring mode",
+    Severity.P4: "informational, trend tracking only",
+}
+
+
 class IncidentType(str, Enum):
     POLITICAL_UNREST = "political_unrest"
     NATURAL_DISASTER = "natural_disaster"

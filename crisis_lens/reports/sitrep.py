@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 from pydantic import BaseModel, Field
 
 from crisis_lens.classification.classifier import ClassificationResult
-from crisis_lens.config import IncidentType, Severity
+from crisis_lens.config import SEVERITY_DESCRIPTIONS, IncidentType, Severity
 from crisis_lens.detection.rules import Signal
 
 
@@ -60,7 +60,7 @@ class SitRep(BaseModel):
             f"# SITREP: {self.title}",
             "",
             f"**Incident ID:** {self.incident_id}",
-            f"**Severity:** {self.severity.value}",
+            f"**Severity:** {self.severity.value} — {SEVERITY_DESCRIPTIONS[self.severity]}",
             f"**Status:** {self.status}",
             f"**Types:** {', '.join(t.value for t in self.incident_types)}",
             f"**Created:** {self.created_at}",
