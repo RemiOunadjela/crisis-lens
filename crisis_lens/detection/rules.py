@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import re
 from abc import ABC, abstractmethod
+from datetime import datetime, timezone
 from hashlib import sha256
 from typing import Any
 
@@ -33,6 +34,7 @@ class Signal(BaseModel):
     suggested_types: list[IncidentType] = Field(default_factory=list)
     metadata: dict[str, Any] = Field(default_factory=dict)
     dedup_key: str = ""
+    created_at: str = ""
 
     def model_post_init(self, __context: Any) -> None:
         if not self.dedup_key:
@@ -209,7 +211,7 @@ class RuleEngine:
             ),
         ]
 
-    def evaluate(self, text: str, language: str = "en", source: str = "unknown") -> Signal | None:
+    def evaluate(self, text: str, language: str = "en", source: str = "unknown", timestamp: float = 0.0) -> Signal | None:
         """Run all rules against text and produce a scored signal."""
         if not text.strip():
             return None
@@ -256,7 +258,15 @@ class RuleEngine:
             if final_score <= prev_score:
                 return None
         self._seen_keys[signal.dedup_key] = final_score
-        signal.signal_id = f"SIG-{signal.dedup_key[:8].upper()}"
+
+        dt = (
+            datetime.fromtimestamp(timestamp, tz=timezone.utc)
+            if timestamp > 0
+            else datetime.now(tz=timezone.utc)
+        )
+        ts_prefix = dt.strftime("%Y%m%d-%H%M%S")
+        signal.signal_id = f"SIG-{ts_prefix}-{signal.dedup_key[:6].upper()}"
+        signal.created_at = dt.isoformat()
 
         return signal
 

@@ -151,6 +151,39 @@ class TestRuleEngine:
         assert signal is not None
         assert signal.signal_id.startswith("SIG-")
 
+    def test_signal_id_includes_timestamp_prefix(self):
+        engine = RuleEngine()
+        signal = engine.evaluate("Reports of a bombing in the city center")
+        assert signal is not None
+        # Format: SIG-YYYYMMDD-HHMMSS-XXXXXX
+        parts = signal.signal_id.split("-")
+        assert len(parts) == 4
+        assert parts[0] == "SIG"
+        assert len(parts[1]) == 8 and parts[1].isdigit()   # YYYYMMDD
+        assert len(parts[2]) == 6 and parts[2].isdigit()   # HHMMSS
+        assert len(parts[3]) == 6                           # hash suffix
+
+    def test_signal_id_reflects_record_timestamp(self):
+        engine = RuleEngine()
+        # Unix timestamp for 2025-03-15 11:30:00 UTC
+        ts = 1742038200.0
+        signal = engine.evaluate(
+            "Earthquake hits the region",
+            timestamp=ts,
+        )
+        assert signal is not None
+        assert signal.signal_id.startswith("SIG-20250315-113000-")
+        assert signal.created_at.startswith("2025-03-15T11:30:00")
+
+    def test_signal_created_at_is_populated(self):
+        engine = RuleEngine()
+        signal = engine.evaluate("Tsunami warning issued for coastal areas")
+        assert signal is not None
+        assert signal.created_at != ""
+        # Should be a valid ISO format string
+        from datetime import datetime
+        datetime.fromisoformat(signal.created_at)
+
 
 class TestSignalModel:
     def test_dedup_key_generated(self):

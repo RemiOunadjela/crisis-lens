@@ -52,6 +52,7 @@ class SignalMonitor:
             text=record.text,
             language=record.language,
             source=record.source,
+            timestamp=record.timestamp,
         )
 
         if signal is None:
