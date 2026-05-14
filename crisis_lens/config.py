@@ -116,10 +116,26 @@ class ReportConfig(BaseModel):
     handover_lookback_hours: int = 8
 
 
+class WebhookConfig(BaseModel):
+    url: str
+    secret: str | None = None
+    headers: dict[str, str] = Field(default_factory=dict)
+    timeout_seconds: int = 10
+    max_retries: int = 3
+    retry_base_delay: float = 1.0
+
+
+class NotificationsConfig(BaseModel):
+    enabled: bool = False
+    webhooks: list[WebhookConfig] = Field(default_factory=list)
+    min_severity: Severity = Severity.P2
+
+
 class PipelineConfig(BaseModel):
     detection: DetectionConfig = Field(default_factory=DetectionConfig)
     classification: ClassificationConfig = Field(default_factory=ClassificationConfig)
     reports: ReportConfig = Field(default_factory=ReportConfig)
+    notifications: NotificationsConfig = Field(default_factory=NotificationsConfig)
     max_concurrent_tasks: int = 16
     pipeline_timeout_seconds: int = 300
 
@@ -140,4 +156,4 @@ class PipelineConfig(BaseModel):
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, "w") as f:
-            yaml.dump(self.model_dump(), f, default_flow_style=False, sort_keys=False)
+            yaml.dump(self.model_dump(mode="json"), f, default_flow_style=False, sort_keys=False)

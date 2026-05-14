@@ -19,6 +19,7 @@ from crisis_lens.classification.classifier import ClassificationResult, CrisisCl
 from crisis_lens.config import PipelineConfig, Severity
 from crisis_lens.detection.monitors import SignalMonitor, StreamMonitor, TextRecord
 from crisis_lens.detection.rules import RuleEngine, Signal
+from crisis_lens.notifications.dispatcher import WebhookDispatcher
 from crisis_lens.reports.sitrep import SitRep, SitRepGenerator
 
 logger = logging.getLogger("crisis_lens.pipeline")
@@ -78,6 +79,7 @@ class CrisisDetectionPipeline:
         self.sitrep_generator = SitRepGenerator(
             max_signals=self.config.reports.max_signals_per_report,
         )
+        self.dispatcher = WebhookDispatcher(self.config.notifications)
 
     async def process_records(self, records: list[TextRecord]) -> PipelineResult:
         """Process a batch of text records through the full pipeline."""
@@ -90,6 +92,10 @@ class CrisisDetectionPipeline:
 
         if not signals:
             return result
+
+        # Webhook dispatch
+        for signal in signals:
+            await self.dispatcher.dispatch(signal)
 
         # Classification stage (if classifier is configured)
         if self.classifier:
@@ -147,4 +153,5 @@ class CrisisDetectionPipeline:
     async def stream_signals(self, path: str) -> AsyncIterator[Signal]:
         """Stream signals from a file for real-time monitoring UIs."""
         async for signal in self.stream_monitor.monitor_file(path):
+            await self.dispatcher.dispatch(signal)
             yield signal

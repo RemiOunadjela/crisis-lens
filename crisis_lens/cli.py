@@ -35,12 +35,22 @@ def main() -> None:
 @click.option("--min-severity", default="P4", type=click.Choice(["P0", "P1", "P2", "P3", "P4"]))
 @click.option("--output", "-o", type=click.Path(), help="Output file for signals (JSONL)")
 @click.option("--dry-run", is_flag=True, default=False, help="Parse and detect without writing output; print a summary instead")
-def monitor(source: str, config_path: str | None, min_severity: str, output: str | None, dry_run: bool) -> None:
+@click.option("--webhook", "webhook_urls", multiple=True, metavar="URL", help="Webhook URL to POST alerts to (repeatable)")
+def monitor(source: str, config_path: str | None, min_severity: str, output: str | None, dry_run: bool, webhook_urls: tuple[str, ...]) -> None:
     """Monitor a text stream for crisis signals."""
-    from crisis_lens.config import PipelineConfig, Severity
+    from crisis_lens.config import NotificationsConfig, PipelineConfig, Severity, WebhookConfig
     from crisis_lens.pipeline import CrisisDetectionPipeline
 
     config = PipelineConfig.from_yaml(config_path) if config_path else PipelineConfig.default()
+    if webhook_urls:
+        if dry_run:
+            console.print("[dim]-- webhooks suppressed in dry-run mode --[/dim]")
+        else:
+            config.notifications = NotificationsConfig(
+                enabled=True,
+                webhooks=[WebhookConfig(url=url) for url in webhook_urls],
+                min_severity=Severity(min_severity),
+            )
     pipeline = CrisisDetectionPipeline(config=config)
     severity_filter = Severity(min_severity)
     severity_order = list(Severity)
